@@ -12,10 +12,138 @@
   </head>
 
 	<script type="text/javascript">
-		var global_tasks = [];
-		var current_task = null;
-		var end_task = null;
-		var counter = 1;
+		// var global_tasks = [];
+		// var current_task = null;
+		// var end_task = null;
+		// var counter = 1;
+
+		class TaskControl{
+
+			constructor(){
+				this.global_tasks = [];
+				this.current_task = null;
+				this.counter = 1;
+				this.end_task = null;
+			}
+
+			updateEndTask(){
+				if(this.global_tasks.length > 0){
+					this.end_task = this.global_tasks[this.global_tasks.length-1].value;
+				}
+				else{
+					this.end_task = null;				
+				}
+
+			}
+
+			addTask(end_time, newtask){
+				this.global_tasks.push({
+					key: end_time,
+					value: newtask
+				});
+			}
+
+
+			deleteTask(key){
+				for(let [k,v] of this.global_tasks.entries()){
+					if(v.key == key){
+						this.global_tasks.splice(k,1);
+						
+					}
+				}
+				this.updateEndTask();
+			}
+
+
+			addelement(taskname, duration, interval_time){
+				var start_time;
+				var end_time;
+				var newtask;
+				if(this.end_task!=null){
+					start_time = new Date(this.end_task.end);
+					start_time.setMinutes(start_time.getMinutes() + parseInt(interval_time));
+					end_time = new Date(start_time.getTime());
+					end_time.setMinutes(end_time.getMinutes() + parseInt(duration));
+					newtask = new Task(taskname, start_time, end_time);
+					this.end_task = newtask;
+
+				}else{
+				//initializing
+					start_time = new Date();
+					start_time.setMinutes(start_time.getMinutes() + parseInt(interval_time));
+					end_time = new Date(start_time.getTime());
+					end_time.setMinutes(end_time.getMinutes() + parseInt(duration));
+					newtask = new Task(taskname, start_time, end_time);
+					this.current_task = newtask;
+					this.end_task = newtask;
+				}
+
+				this.global_tasks.push({
+					key: end_time.getTime(),
+					value: newtask
+				});
+
+
+				var minutesbegin = newtask.begin.getMinutes() < 10 ? '0' : '';
+				var minutesend = newtask.end.getMinutes() < 10 ? '0' : '';
+				var htmlElement = "" +
+			    "<tr id='"+end_time.getTime()+"'>" +
+			      "<th scope='row'>"+this.counter+"</th>"+
+			      "<td>"+newtask.taskname+"</td>"+
+			      "<td>"+newtask.begin.getHours()+":"+ minutesbegin +newtask.begin.getMinutes()+"</td>"+
+			      "<td>"+newtask.end.getHours()+":"+ minutesend +newtask.end.getMinutes()+"</td>"+
+			      "<td style='display:none;'>"+end_time.getTime()+"</td>"+
+			      "<td><button type='button' class='btn btn-danger' onclick='taskcontrol.delelement("+end_time.getTime()+")'> Remove </button></td>"+
+			    "</tr>";
+			    this.counter++;
+
+			    if(this.counter == 2){
+			    	this.initiate_current_task_table();
+			    }
+
+
+				$("#tablevalue").append(htmlElement);
+
+			}
+
+			delelement(key){
+				$("#"+key).css("display","none");
+				this.deleteTask(key);
+			}
+
+			initiate_current_task_table(){
+				if(this.current_task != null){
+					var taskname = this.current_task.taskname;
+					var begin_hours = this.current_task.begin.getHours();
+					var begin_minutes = this.current_task.begin.getMinutes();
+					begin_minutes = begin_minutes < 10 ? "0" + begin_minutes : begin_minutes;
+					var end_hours = this.current_task.end.getHours();
+					var end_minutes = this.current_task.end.getMinutes();
+					end_minutes = end_minutes < 10 ? "0" + end_minutes : end_minutes;
+					var html_string = "" +
+					"<tr>" +
+						"<th scope='row'>1</th>" +
+						"<td>"+taskname+"</td>" +
+						"<td>"+begin_hours+":"+ begin_minutes+"</td>" +
+						"<td>"+end_hours+":"+end_minutes+"</td>" +
+						"<td>100%</td>" +
+					"</tr>";
+
+
+					$("#current_task_table").html(html_string);
+				}
+			}
+
+			print_tasks(){
+				console.log("=====PRINT TASKS=====");
+				for(let [k,v] of this.global_tasks.entries()){
+					console.log("key: " + v.key);
+					console.log("value: " + v.value.taskname);
+				}
+				console.log("=====END PRINT TASKS=====");
+			}
+
+		}
 
 
 
@@ -27,78 +155,65 @@
 			}
 		}
 
-		function addelement(taskname, duration, interval_time){
-			var start_time;
-			var end_time;
-			var newtask;
-			if(end_task!=null){
-				start_time = new Date(end_task.end);
-				start_time.setMinutes(start_time.getMinutes() + parseInt(interval_time));
-				end_time = new Date(start_time.getTime());
-				end_time.setMinutes(end_time.getMinutes() + parseInt(duration));
-				newtask = new Task(taskname, start_time, end_time);
-				end_task = newtask;
+		var taskcontrol = new TaskControl();
 
-			}
-			//initializing
-			if(current_task==null){
-				start_time = new Date();
-				end_time = new Date();
-				end_time.setMinutes(end_time.getMinutes() + duration);
-				newtask = new Task(taskname, start_time, end_time);
-				current_task = newtask;
-				end_task = newtask;
-			}
+		// function addelement(taskname, duration, interval_time){
+		// 	var start_time;
+		// 	var end_time;
+		// 	var newtask;
+		// 	if(end_task!=null){
+		// 		start_time = new Date(end_task.end);
+		// 		start_time.setMinutes(start_time.getMinutes() + parseInt(interval_time));
+		// 		end_time = new Date(start_time.getTime());
+		// 		end_time.setMinutes(end_time.getMinutes() + parseInt(duration));
+		// 		newtask = new Task(taskname, start_time, end_time);
+		// 		end_task = newtask;
 
-			global_tasks.push({
-				key: end_time.getTime(),
-				value: newtask
-			});
+		// 	}
+		// 	//initializing
+		// 	if(current_task==null){
+		// 		start_time = new Date();
+		// 		start_time.setMinutes(start_time.getMinutes() + parseInt(interval_time));
+		// 		end_time = new Date(start_time.getTime());
+		// 		end_time.setMinutes(end_time.getMinutes() + parseInt(duration));
+		// 		newtask = new Task(taskname, start_time, end_time);
+		// 		current_task = newtask;
+		// 		end_task = newtask;
+		// 	}
 
-
-			var minutesbegin = newtask.begin.getMinutes() < 10 ? '0' : '';
-			var minutesend = newtask.end.getMinutes() < 10 ? '0' : '';
-			var htmlElement = "" +
-		    "<tr id='"+end_time.getTime()+"'>" +
-		      "<th scope='row'>"+counter+"</th>"+
-		      "<td>"+newtask.taskname+"</td>"+
-		      "<td>"+newtask.begin.getHours()+":"+ minutesbegin +newtask.begin.getMinutes()+"</td>"+
-		      "<td>"+newtask.end.getHours()+":"+ minutesend +newtask.end.getMinutes()+"</td>"+
-		      "<td style='display:none;'>"+end_time.getTime()+"</td>"+
-		      "<td><button type='button' class='btn btn-danger'> Remove </button></td>"+
-		    "</tr>";
-		    counter++;
-
-			$("#tablevalue").append(htmlElement);
-
-		}
-
-		function intiate_current_task_table(){
-			var taskname = current_task.taskname;
-			var begin_hours = current_task.begin.getHours();
-			var begin_minutes = current_task.begin.getMinutes();
-			begin_minutes = begin_minutes < 10 ? "0" + begin_minutes : begin_minutes;
-			var end_hours = current_task.end.getHours();
-			var end_minutes = current_task.end.getMinutes();
-			end_minutes = end_minutes < 10 ? "0" + end_minutes : end_minutes;
-			var html_string = "" +
-			"<tr>" +
-				"<th scope='row'>1</th>" +
-				"<td>"+taskname+"</td>" +
-				"<td>"+begin_hours+":"+ begin_minutes+"</td>" +
-				"<td>"+end_hours+":"+end_minutes+"</td>" +
-				"<td>100%</td>" +
-			"</tr>";
+		// 	global_tasks.push({
+		// 		key: end_time.getTime(),
+		// 		value: newtask
+		// 	});
 
 
-			$("#current_task_table").html(html_string);
-		}
+		// 	var minutesbegin = newtask.begin.getMinutes() < 10 ? '0' : '';
+		// 	var minutesend = newtask.end.getMinutes() < 10 ? '0' : '';
+		// 	var htmlElement = "" +
+		//     "<tr id='"+end_time.getTime()+"'>" +
+		//       "<th scope='row'>"+counter+"</th>"+
+		//       "<td>"+newtask.taskname+"</td>"+
+		//       "<td>"+newtask.begin.getHours()+":"+ minutesbegin +newtask.begin.getMinutes()+"</td>"+
+		//       "<td>"+newtask.end.getHours()+":"+ minutesend +newtask.end.getMinutes()+"</td>"+
+		//       "<td style='display:none;'>"+end_time.getTime()+"</td>"+
+		//       "<td><button type='button' class='btn btn-danger'> Remove </button></td>"+
+		//     "</tr>";
+		//     counter++;
+
+		// 	$("#tablevalue").append(htmlElement);
+
+		// }
+
 
 
 		
 	</script>
 
   <body>
+  	<div>
+		<button id="idprinttasks" type="button" class="btn btn-dark">Print Tasks</button>
+		<button id="idprintendtask" type="button" class="btn btn-dark">Print End Task</button>
+  	</div>
     <h1>Task Time!</h1>
 
 	<div style="width: 50%;">
@@ -174,12 +289,12 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 
 	<script type="text/javascript">
-		addelement('Event1', 60, 30);
-		addelement('Event2', 30, 30);
-		addelement('Event3', 15, 15);	
-		var i=1;
+		// addelement('Event1', 60, 30);
+		// addelement('Event2', 30, 30);
+		// addelement('Event3', 15, 15);	
+		// var i=1;
 
-		global_tasks.sort();
+		// global_tasks.sort();
 		// for(let [k,v] of global_tasks.entries()){
 		// 	// var htmlElement = "<p> Task name: " + v.value.taskname + "</p><p> Start time: " + v.value.begin +
 		// 	// 				  "<p> End time: " + v.value.end + "<br>";
@@ -200,6 +315,11 @@
 		// 	$("#tablevalue").append(htmlElement);
 		// }
 
+
+		// taskcontrol.addTask(0, new Task("test", new Date(), new Date));
+		// taskcontrol.delelement(0);
+
+
 		$("#sendtaskbutton").click(
 			function(){
 				var _taskname = $("#idtaskname").val();
@@ -207,12 +327,43 @@
 				var _interval = $("#idinterval").val();
 
 				alert("taskname: " +_taskname + " duration: " + _duration + " interval: " + _interval);
-				addelement(_taskname, _duration, _interval);
+				taskcontrol.addelement(_taskname, _duration, _interval);
 			}
 		);
 
-		intiate_current_task_table();
+		$("#idprinttasks").click(
+			function(){
+				taskcontrol.print_tasks();
+			}
+		);
+
+		$("#idprintendtask").click(
+			function(){
+				console.log("taskcontrol length: " + taskcontrol.global_tasks.length);
+				console.log("end_task: " + taskcontrol.end_task);
+			}
+		);
+		
+
+
+		// if (typeof(Worker) !== "undefined") {
+		//   alert("Yes");
+		//   // Some code.....
+		// } else {
+		// 	alert("Not");
+		//   // Sorry! No Web Worker support..
+		// }
+
+		// var timevar = 0;
+		// function calctime(){
+		// 	timevar = timevar + 1;
+		// 	console.log(timevar);
+		// 	setTimeout("calctime()",500);
+		// }
+
+		// calctime();
+
 	</script>
 
   </body>
-</html>
+</html
