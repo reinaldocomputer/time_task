@@ -12,6 +12,25 @@
   </head>
 
 	<script type="text/javascript">
+		var w;
+
+		function startWorker() {
+		  if (typeof(Worker) !== "undefined") {
+		    if (typeof(w) == "undefined") {
+		      w = new Worker("task.js");
+		    }
+		    w.onmessage = function(event) {
+		      document.getElementById("result").innerHTML = event.data;
+		    };
+		  } else {
+		    document.getElementById("result").innerHTML = "Sorry! No Web Worker support.";
+		  }
+		}
+
+		function stopWorker() {
+		  w.terminate();
+		  w = undefined;
+		}
 		// var global_tasks = [];
 		// var current_task = null;
 		// var end_task = null;
@@ -281,7 +300,6 @@
 
 
 
-
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
@@ -363,7 +381,12 @@
 
 		// calctime();
 
-	</script>
 
+
+
+	</script>
+	<p>Count numbers: <output id="result"></output></p>
+	<button onclick="startWorker()">Start Worker</button>
+	<button onclick="stopWorker()">Stop Worker</button>
   </body>
 </html
