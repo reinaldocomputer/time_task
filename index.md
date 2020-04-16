@@ -8,29 +8,11 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
-    <title>Task Time Test Version</title>
+    <title>Task Time</title>
   </head>
 
 	<script type="text/javascript">
-		var w;
 
-		function startWorker() {
-		  if (typeof(Worker) !== "undefined") {
-		    if (typeof(w) == "undefined") {
-		      w = new Worker("task.js");
-		    }
-		    w.onmessage = function(event) {
-		      document.getElementById("result").innerHTML = event.data;
-		    };
-		  } else {
-		    document.getElementById("result").innerHTML = "Sorry! No Web Worker support.";
-		  }
-		}
-
-		function stopWorker() {
-		  w.terminate();
-		  w = undefined;
-		}
 		// var global_tasks = [];
 		// var current_task = null;
 		// var end_task = null;
@@ -41,8 +23,26 @@
 			constructor(){
 				this.global_tasks = [];
 				this.current_task = null;
-				this.counter = 1;
 				this.end_task = null;
+				this.current_percent = 0;
+			}
+
+			nextTask(){
+				if(this.global_tasks.length > 1){
+					this.current_task = this.global_tasks[1].value;
+					taskcontrol.delelement(this.global_tasks[0].key);
+					this.global_tasks.splice(0,1);
+					this.initiate_current_task_table();
+
+				}
+
+				if(this.global_tasks.length == 1){
+					taskcontrol.delelement(this.global_tasks[0].key);
+					this.global_tasks.splice(0,1);
+					this.current_task = null;
+					this.initiate_current_task_table();					
+				}
+
 			}
 
 			updateEndTask(){
@@ -67,7 +67,10 @@
 				for(let [k,v] of this.global_tasks.entries()){
 					if(v.key == key){
 						this.global_tasks.splice(k,1);
-						
+						if(k == 0){
+							this.current_task = null;
+							this.initiate_current_task_table();
+						}
 					}
 				}
 				this.updateEndTask();
@@ -87,14 +90,17 @@
 					this.end_task = newtask;
 
 				}else{
-				//initializing
 					start_time = new Date();
 					start_time.setMinutes(start_time.getMinutes() + parseInt(interval_time));
 					end_time = new Date(start_time.getTime());
 					end_time.setMinutes(end_time.getMinutes() + parseInt(duration));
 					newtask = new Task(taskname, start_time, end_time);
+				}
+				if(this.current_task == null){
 					this.current_task = newtask;
 					this.end_task = newtask;
+					this.initiate_current_task_table();
+
 				}
 
 				this.global_tasks.push({
@@ -107,19 +113,12 @@
 				var minutesend = newtask.end.getMinutes() < 10 ? '0' : '';
 				var htmlElement = "" +
 			    "<tr id='"+end_time.getTime()+"'>" +
-			      "<th scope='row'>"+this.counter+"</th>"+
 			      "<td>"+newtask.taskname+"</td>"+
 			      "<td>"+newtask.begin.getHours()+":"+ minutesbegin +newtask.begin.getMinutes()+"</td>"+
 			      "<td>"+newtask.end.getHours()+":"+ minutesend +newtask.end.getMinutes()+"</td>"+
 			      "<td style='display:none;'>"+end_time.getTime()+"</td>"+
 			      "<td><button type='button' class='btn btn-danger' onclick='taskcontrol.delelement("+end_time.getTime()+")'> Remove </button></td>"+
 			    "</tr>";
-			    this.counter++;
-
-			    if(this.counter == 2){
-			    	this.initiate_current_task_table();
-			    }
-
 
 				$("#tablevalue").append(htmlElement);
 
@@ -141,16 +140,20 @@
 					end_minutes = end_minutes < 10 ? "0" + end_minutes : end_minutes;
 					var html_string = "" +
 					"<tr>" +
-						"<th scope='row'>1</th>" +
 						"<td>"+taskname+"</td>" +
 						"<td>"+begin_hours+":"+ begin_minutes+"</td>" +
 						"<td>"+end_hours+":"+end_minutes+"</td>" +
-						"<td>100%</td>" +
+						"<td><div style='width:100%;'><div id='idcurrentstatus' style='background-color:blue'> </div><div></td>" +
 					"</tr>";
 
 
 					$("#current_task_table").html(html_string);
+					startWorker();
+				}else{
+					stopWorker();
+					$("#current_task_table").html("");
 				}
+				
 			}
 
 			print_tasks(){
@@ -229,10 +232,12 @@
 	</script>
 
   <body>
+  	<!-- 
   	<div>
 		<button id="idprinttasks" type="button" class="btn btn-dark">Print Tasks</button>
 		<button id="idprintendtask" type="button" class="btn btn-dark">Print End Task</button>
-  	</div>
+  	</div> 
+  -->
     <h1>Task Time!</h1>
 
 	<div style="width: 50%;">
@@ -257,7 +262,6 @@
 	<table class="table">
 	<thead>
 		<tr>
-			<th scope="col">#</th>
 			<th scope="col">Task name</th>
 			<th scope="col">Begin</th>
 			<th scope="col">End</th>
@@ -279,7 +283,6 @@
 		<table class="table">
 		  <thead>
 		    <tr>
-		      <th scope="col">#</th>
 		      <th scope="col">Task name</th>
 		      <th scope="col">Begin</th>
 		      <th scope="col">End</th>
@@ -344,7 +347,7 @@
 				var _duration = $("#idduration").val();
 				var _interval = $("#idinterval").val();
 
-				alert("taskname: " +_taskname + " duration: " + _duration + " interval: " + _interval);
+				// alert("taskname: " +_taskname + " duration: " + _duration + " interval: " + _interval);
 				taskcontrol.addelement(_taskname, _duration, _interval);
 			}
 		);
@@ -364,29 +367,42 @@
 		
 
 
-		// if (typeof(Worker) !== "undefined") {
-		//   alert("Yes");
-		//   // Some code.....
-		// } else {
-		// 	alert("Not");
-		//   // Sorry! No Web Worker support..
-		// }
+		var w;
 
-		// var timevar = 0;
-		// function calctime(){
-		// 	timevar = timevar + 1;
-		// 	console.log(timevar);
-		// 	setTimeout("calctime()",500);
-		// }
+		function startWorker() {
+		  if (typeof(Worker) !== "undefined") {
+		    if (typeof(w) == "undefined") {
+		      w = new Worker("task.js");
+		    }
+		    w.postMessage({'end_time:':'TEMPO FINAL'});
+		    w.onmessage = function(event) {
+		      var percent = event.data;
+		      taskcontrol.current_percent = percent;
+		      w.postMessage(taskcontrol.current_task);
+		      if(percent <= 100){
+		      	document.getElementById("idcurrentstatus").innerHTML = percent + '%';
+		      	$('#idcurrentstatus').css('color','white');
+		      	$('#idcurrentstatus').css('width',percent);
+		      }
 
-		// calctime();
+		      if(percent > 100){
+		      	taskcontrol.nextTask();
 
+		      }
 
+		    };
+		  } else {
+		    document.getElementById("result").innerHTML = "Sorry! No Web Worker support.";
+		  }
+		}
+
+		function stopWorker() {
+		  w.terminate();
+		  w = undefined;
+		}
 
 
 	</script>
-	<p>Count numbers: <output id="result"></output></p>
-	<button onclick="startWorker()">Start Worker</button>
-	<button onclick="stopWorker()">Stop Worker</button>
+
   </body>
 </html
