@@ -32,17 +32,21 @@ class HandleTask{
 				if(this.previous_task != null){
 					if(this.current_task.taskname != this.previous_task.taskname){
 						this.state = 3;
-						this.new_task = true;
+						// this.new_task = true;
 						console.log("previous != null");
 					}
 				}else{
-						this.new_task = true;
+						// this.new_task = true;
 						this.state = 3;
 						console.log("previous == nulll");
 				}
 				this.state = 1;
 				return true;
 			}
+		}
+		if(this.previous_task != null && this.current_task == null){
+			this.previous_task = null;
+			this.new_task = true;
 		}
 		this.state = 2;
 		return false;
@@ -62,24 +66,37 @@ class HandleTask{
 		return 0;
 	}
 
-	// updatePrevious(){
-	// 	if(this.current_task != null){
-	// 		if(this.previous_task != null){
-	// 			if(this.current_task.begin != this.previous_task.begin){
-	// 				console.log(this.current_task);
-	// 				console.log(this.previous_task);
-	// 				this.new_task = true;
-	// 				this.previous_task = this.current_task;
-	// 			}
-	// 			else{
-	// 				this.new_task = false;
-	// 			}
-	// 		}else{
-	// 			this.previous_task = this.current_task;
-	// 			this.new_task = true;
-	// 		}
-	// 	}
-	// }
+	audio(){
+		if(this.current_task != null){
+			var now = new Date();
+
+			//begin
+			var c_h = this.current_task.begin.getHours();
+			var c_m = this.current_task.begin.getMinutes();
+			var c_s = this.current_task.begin.getSeconds();
+
+
+			//end
+			var e_h = this.current_task.end.getHours();
+			var e_m = this.current_task.end.getMinutes();
+			var e_s = this.current_task.end.getSeconds();
+
+
+			var n_h = now.getHours();
+			var n_m = now.getMinutes();
+			var n_s = now.getSeconds();
+
+
+			if(c_h == n_h && c_m == n_m && c_s == n_s){
+				this.new_task = true;
+			}
+
+			if(e_h == n_h && e_m == n_m && e_s == n_s){
+				this.new_task = true;
+			}			
+		}
+	}
+
 }
 
 var handletask = new HandleTask();
@@ -91,6 +108,7 @@ onmessage = function(e){
 		handletask.update(e.data);
 		handletask.run();
 		handletask.updatePercent();
+		handletask.audio();
 		postMessage(handletask);
 		handletask.new_task = false;
 	}
